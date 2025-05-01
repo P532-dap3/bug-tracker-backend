@@ -38,7 +38,6 @@ public class DTOMapper {
         return dto;
     }
 
-    // --- Issue ---
     public static IssueDTO toIssueDTO(Issue issue) {
         IssueDTO dto = new IssueDTO();
         dto.id = issue.getId();
@@ -46,22 +45,32 @@ public class DTOMapper {
         dto.description = issue.getDescription();
         dto.status = issue.getStatus();
         dto.priority = issue.getPriority();
+        dto.deleted = issue.isDeleted();
         dto.createdAt = issue.getCreatedAt();
         dto.updatedAt = issue.getUpdatedAt();
-        if (issue.getProject() != null) dto.projectId = issue.getProject().getId();
-        if (issue.getAssignedUser() != null) dto.assignedUserId = issue.getAssignedUser().getId();
+
+        if (issue.getProject() != null) {
+            dto.projectId = issue.getProject().getId();
+            dto.projectName = issue.getProject().getName();
+        }
+
+        if (issue.getAssignedUser() != null) {
+            dto.assignedUserId = issue.getAssignedUser().getId();
+            dto.assignedUsername = issue.getAssignedUser().getUsername();
+        }
+
         return dto;
     }
 
-    public static Issue toIssueEntity(IssueDTO dto, Project project, User user) {
+    public static Issue toIssueEntity(IssueDTO dto, Project project, User assignedUser) {
         Issue issue = new Issue();
-        issue.setId(dto.id);
         issue.setTitle(dto.title);
         issue.setDescription(dto.description);
         issue.setStatus(dto.status);
         issue.setPriority(dto.priority);
+        issue.setDeleted(dto.deleted);
         issue.setProject(project);
-        issue.setAssignedUser(user);
+        issue.setAssignedUser(assignedUser);
         return issue;
     }
 }

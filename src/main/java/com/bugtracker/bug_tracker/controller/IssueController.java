@@ -32,8 +32,10 @@ public class IssueController {
     }
 
     @GetMapping("/status/{status}")
-    public List<Issue> getByStatus(@PathVariable IssueStatus status) {
-        return issueRepository.findByStatus(status);
+    public List<IssueDTO> getByStatus(@PathVariable IssueStatus status) {
+        return issueRepository.findByStatus(status).stream()
+                .map(DTOMapper::toIssueDTO)
+                .toList();
     }
 
     @PostMapping

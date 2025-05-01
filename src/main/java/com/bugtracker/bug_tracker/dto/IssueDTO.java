@@ -11,9 +11,14 @@ public class IssueDTO {
     public String description;
     public IssueStatus status;
     public IssuePriority priority;
-    public Long projectId;
-    public Long assignedUserId;
+    public boolean deleted;
     public LocalDateTime createdAt;
     public LocalDateTime updatedAt;
+
+    public Long projectId;
+    public String projectName;
+
+    public Long assignedUserId;
+    public String assignedUsername;
 }
 
