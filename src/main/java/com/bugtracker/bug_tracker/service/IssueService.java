@@ -6,6 +6,8 @@ import com.bugtracker.bug_tracker.model.*;
 import com.bugtracker.bug_tracker.repository.IssueRepository;
 import com.bugtracker.bug_tracker.repository.ProjectRepository;
 import com.bugtracker.bug_tracker.repository.UserRepository;
+import com.bugtracker.bug_tracker.state.IssueState;
+import com.bugtracker.bug_tracker.state.IssueStateFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -74,10 +76,18 @@ public class IssueService {
         return issueRepository.save(issue);
     }
 
-    public Issue changeStatus(Long issueId, IssueStatus status) {
+    public Issue changeStatus(Long issueId, IssueStatus targetStatus) {
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
-        issue.setStatus(status);
+
+        IssueState currentState = IssueStateFactory.getState(issue.getStatus());
+
+        try {
+            currentState.transitionTo(issue, targetStatus);
+        } catch (IllegalStateException e) {
+            throw new RuntimeException("Invalid state transition: " + e.getMessage());
+        }
+
         return issueRepository.save(issue);
     }
 
