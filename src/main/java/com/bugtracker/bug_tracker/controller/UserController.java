@@ -3,7 +3,7 @@ package com.bugtracker.bug_tracker.controller;
 import com.bugtracker.bug_tracker.dto.UserDTO;
 import com.bugtracker.bug_tracker.mapper.DTOMapper;
 import com.bugtracker.bug_tracker.model.User;
-import com.bugtracker.bug_tracker.repository.UserRepository;
+import com.bugtracker.bug_tracker.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,11 +15,11 @@ import java.util.stream.Collectors;
 public class UserController {
 
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     @GetMapping
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll().stream()
+        return userService.getAllUsers().stream()
                 .map(DTOMapper::toUserDTO)
                 .collect(Collectors.toList());
     }
@@ -31,31 +31,28 @@ public class UserController {
         user.setEmail(userDTO.email);
         user.setRole(userDTO.role);
 
-        User savedUser = userRepository.save(user);
+        User savedUser = userService.createUser(user);
         return DTOMapper.toUserDTO(savedUser);
     }
 
     @GetMapping("/{id}")
     public UserDTO getUser(@PathVariable Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        return DTOMapper.toUserDTO(user);
+        return DTOMapper.toUserDTO(userService.getUser(id));
     }
 
     @PutMapping("/{id}")
-    public User updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
-        return userRepository.findById(id).map(user -> {
-            user.setUsername(updatedUser.getUsername());
-            user.setEmail(updatedUser.getEmail());
-            return userRepository.save(user);
-        }).orElseThrow(() -> new RuntimeException("User not found"));
+    public UserDTO updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+        User updatedUser = new User();
+        updatedUser.setUsername(userDTO.username);
+        updatedUser.setEmail(userDTO.email);
+        updatedUser.setRole(userDTO.role);
+
+        User savedUser = userService.updateUser(id, updatedUser);
+        return DTOMapper.toUserDTO(savedUser);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUser(@PathVariable Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        userRepository.delete(user);
+        userService.deleteUser(id);
     }
 }
-
