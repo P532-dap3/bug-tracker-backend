@@ -1,13 +1,12 @@
 package com.bugtracker.bug_tracker.service;
 
+import com.bugtracker.bug_tracker.command.*;
 import com.bugtracker.bug_tracker.dto.IssueDTO;
 import com.bugtracker.bug_tracker.mapper.DTOMapper;
 import com.bugtracker.bug_tracker.model.*;
 import com.bugtracker.bug_tracker.repository.IssueRepository;
 import com.bugtracker.bug_tracker.repository.ProjectRepository;
 import com.bugtracker.bug_tracker.repository.UserRepository;
-import com.bugtracker.bug_tracker.state.IssueState;
-import com.bugtracker.bug_tracker.state.IssueStateFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -67,28 +66,37 @@ public class IssueService {
         return issueRepository.findByAssignedUserIdAndPriorityAndDeletedFalse(userId, priority);
     }
 
+    public Issue changeStatus(Long issueId, IssueStatus targetStatus) {
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new RuntimeException("Issue not found"));
+
+        IssueCommand command = new ChangeIssueStatusCommand(targetStatus);
+        IssueCommandInvoker invoker = new IssueCommandInvoker();
+        Issue updatedIssue = invoker.runCommand(command, issue);
+
+        return issueRepository.save(updatedIssue);
+    }
+
     public Issue assignUser(Long issueId, Long userId) {
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        issue.setAssignedUser(user);
-        return issueRepository.save(issue);
+
+        IssueCommand command = new AssignUserCommand(user);
+        Issue updated = new IssueCommandInvoker().runCommand(command, issue);
+
+        return issueRepository.save(updated);
     }
 
-    public Issue changeStatus(Long issueId, IssueStatus targetStatus) {
+    public Issue changePriority(Long issueId, IssuePriority priority) {
         Issue issue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
 
-        IssueState currentState = IssueStateFactory.getState(issue.getStatus());
+        IssueCommand command = new ChangeIssuePriorityCommand(priority);
+        Issue updated = new IssueCommandInvoker().runCommand(command, issue);
 
-        try {
-            currentState.transitionTo(issue, targetStatus);
-        } catch (IllegalStateException e) {
-            throw new RuntimeException("Invalid state transition: " + e.getMessage());
-        }
-
-        return issueRepository.save(issue);
+        return issueRepository.save(updated);
     }
 
     public void softDelete(Long issueId) {

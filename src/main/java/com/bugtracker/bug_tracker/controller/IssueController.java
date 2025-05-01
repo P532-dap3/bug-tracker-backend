@@ -83,6 +83,11 @@ public class IssueController {
         return DTOMapper.toIssueDTO(issueService.changeStatus(id, status));
     }
 
+    @PutMapping("/{id}/priority/{priority}")
+    public IssueDTO changePriority(@PathVariable Long id, @PathVariable IssuePriority priority) {
+        return DTOMapper.toIssueDTO(issueService.changePriority(id, priority));
+    }
+
     @DeleteMapping("/{id}")
     public void softDeleteIssue(@PathVariable Long id) {
         issueService.softDelete(id);
