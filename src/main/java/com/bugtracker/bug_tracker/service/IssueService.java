@@ -9,8 +9,12 @@ import com.bugtracker.bug_tracker.repository.ProjectRepository;
 import com.bugtracker.bug_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CompositeIterator;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class IssueService {
@@ -42,7 +46,18 @@ public class IssueService {
                     .orElseThrow(() -> new RuntimeException("User not found"));
         }
 
-        Issue issue = DTOMapper.toIssueEntity(dto, project, user);
+        Issue parentIssue = null;
+        if (dto.parentIssueId != null) {
+            parentIssue = issueRepository.findById(dto.parentIssueId)
+                    .orElseThrow(() -> new RuntimeException("Parent issue not found"));
+            if (parentIssue.getParentIssue() != null) {
+                throw new RuntimeException("Cannot create a sub-issue from a sub-issue");
+            }
+        }
+
+        Issue issue = DTOMapper.toIssueEntity(dto, project, user, parentIssue);
+        issue.setParentIssue(parentIssue);
+
         return issueRepository.save(issue);
     }
 
@@ -64,6 +79,12 @@ public class IssueService {
 
     public List<Issue> getIssuesByUserAndPriority(Long userId, IssuePriority priority) {
         return issueRepository.findByAssignedUserIdAndPriorityAndDeletedFalse(userId, priority);
+    }
+
+    public List<Issue> getSubIssues(Long parentIssueId) {
+        Issue parent = issueRepository.findById(parentIssueId)
+                .orElseThrow(() -> new RuntimeException("Parent issue not found"));
+        return parent.getSubIssues();
     }
 
     public Issue changeStatus(Long issueId, IssueStatus targetStatus) {

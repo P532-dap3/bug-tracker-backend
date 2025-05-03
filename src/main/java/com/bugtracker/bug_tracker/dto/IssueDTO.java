@@ -4,6 +4,7 @@ import com.bugtracker.bug_tracker.model.IssuePriority;
 import com.bugtracker.bug_tracker.model.IssueStatus;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class IssueDTO {
     public Long id;
@@ -20,5 +21,9 @@ public class IssueDTO {
 
     public Long assignedUserId;
     public String assignedUsername;
-}
 
+    public Long parentIssueId;
+    public String parentIssueTitle;
+
+    public List<IssueDTO> subIssues;
+}
