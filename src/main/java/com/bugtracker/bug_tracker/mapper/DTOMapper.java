@@ -59,10 +59,25 @@ public class DTOMapper {
             dto.assignedUsername = issue.getAssignedUser().getUsername();
         }
 
+        if (issue.getParentIssue() != null) {
+            dto.parentIssueId = issue.getParentIssue().getId();
+            dto.parentIssueTitle = issue.getParentIssue().getTitle();
+        } else {
+            dto.parentIssueId = -1L;
+            dto.parentIssueTitle = "";
+        }
+
+        if (issue.getSubIssues() != null) {
+            dto.subIssues = issue.getSubIssues().stream()
+                    .map(DTOMapper::toIssueDTO)
+                    .toList();
+        }
+
         return dto;
     }
 
-    public static Issue toIssueEntity(IssueDTO dto, Project project, User assignedUser) {
+
+    public static Issue toIssueEntity(IssueDTO dto, Project project, User assignedUser, Issue parentIssue) {
         Issue issue = new Issue();
         issue.setTitle(dto.title);
         issue.setDescription(dto.description);
@@ -71,6 +86,7 @@ public class DTOMapper {
         issue.setDeleted(dto.deleted);
         issue.setProject(project);
         issue.setAssignedUser(assignedUser);
+        issue.setParentIssue(parentIssue);
         return issue;
     }
 }

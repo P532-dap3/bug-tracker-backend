@@ -1,11 +1,14 @@
 package com.bugtracker.bug_tracker.model;
 
+import com.bugtracker.bug_tracker.iterator.CompositeIterator;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.List;
 
 @Entity
-public class Issue {
+public class Issue implements Iterable<Issue> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,6 +35,13 @@ public class Issue {
     @ManyToOne
     @JoinColumn(name = "assigned_user_id")
     private User assignedUser;
+
+    @ManyToOne
+    @JoinColumn(name = "parent_issue_id")
+    private Issue parentIssue;
+
+    @OneToMany(mappedBy = "parentIssue", cascade = CascadeType.ALL)
+    private List<Issue> subIssues;
 
     @PrePersist
     protected void onCreate() {
@@ -122,5 +132,25 @@ public class Issue {
     public void setAssignedUser(User assignedUser) {
         this.assignedUser = assignedUser;
     }
-}
 
+    public Issue getParentIssue() {
+        return parentIssue;
+    }
+
+    public void setParentIssue(Issue parentIssue) {
+        this.parentIssue = parentIssue;
+    }
+
+    public List<Issue> getSubIssues() {
+        return subIssues;
+    }
+
+    public void setSubIssues(List<Issue> subIssues) {
+        this.subIssues = subIssues;
+    }
+
+    @Override
+    public Iterator<Issue> iterator() {
+        return new CompositeIterator(this);
+    }
+}
