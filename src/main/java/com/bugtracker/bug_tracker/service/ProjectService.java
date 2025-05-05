@@ -1,7 +1,10 @@
 package com.bugtracker.bug_tracker.service;
 
+import com.bugtracker.bug_tracker.model.Issue;
 import com.bugtracker.bug_tracker.model.Project;
+import com.bugtracker.bug_tracker.repository.IssueRepository;
 import com.bugtracker.bug_tracker.repository.ProjectRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +15,9 @@ public class ProjectService {
 
     @Autowired
     private ProjectRepository projectRepository;
+
+    @Autowired
+    private IssueRepository issueRepository;
 
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
@@ -32,8 +38,17 @@ public class ProjectService {
         return projectRepository.save(existing);
     }
 
-    public void deleteProject(Long id) {
-        projectRepository.deleteById(id);
+    @Transactional
+    public void deleteProject(Long projectId) {
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // Delete all issues (and their sub-issues) for this project
+        List<Issue> issues = issueRepository.findByProjectId(projectId);
+        issueRepository.deleteAll(issues);
+
+        // Finally delete the project
+        projectRepository.delete(project);
     }
 }
 

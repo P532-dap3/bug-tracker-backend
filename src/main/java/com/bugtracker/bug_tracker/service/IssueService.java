@@ -9,7 +9,7 @@ import com.bugtracker.bug_tracker.repository.ProjectRepository;
 import com.bugtracker.bug_tracker.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CompositeIterator;
+import com.bugtracker.bug_tracker.iterator.CompositeIterator;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,6 +35,32 @@ public class IssueService {
     public List<Issue> getIssuesByStatus(IssueStatus status) {
         return issueRepository.findByStatusAndDeletedFalse(status);
     }
+
+    public Issue getIssueById(Long issueId) {
+        return issueRepository.findById(issueId)
+                .orElseThrow(() -> new RuntimeException("Issue not found"));
+    }
+
+    public Issue updateIssue(Long issueId, IssueDTO dto) {
+        Issue issue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new RuntimeException("Issue not found"));
+
+        issue.setTitle(dto.title);
+        issue.setDescription(dto.description);
+        issue.setPriority(dto.priority);
+        issue.setStatus(dto.status);
+
+        if (dto.assignedUserId != null) {
+            User user = userRepository.findById(dto.assignedUserId)
+                    .orElseThrow(() -> new RuntimeException("Assigned user not found"));
+            issue.setAssignedUser(user);
+        } else {
+            issue.setAssignedUser(null);
+        }
+
+        return issueRepository.save(issue);
+    }
+
 
     public Issue createIssueFromDTO(IssueDTO dto) {
         Project project = projectRepository.findById(dto.projectId)
@@ -118,6 +144,21 @@ public class IssueService {
         Issue updated = new IssueCommandInvoker().runCommand(command, issue);
 
         return issueRepository.save(updated);
+    }
+
+    public List<IssueDTO> getIssueHierarchy(Long issueId) {
+        Issue rootIssue = issueRepository.findById(issueId)
+                .orElseThrow(() -> new RuntimeException("Issue not found"));
+
+        List<IssueDTO> issueDTOs = new ArrayList<>();
+        CompositeIterator iterator = new CompositeIterator(rootIssue);
+
+        while (iterator.hasNext()) {
+            Issue issue = iterator.next();
+            issueDTOs.add(DTOMapper.toIssueDTO(issue));
+        }
+
+        return issueDTOs;
     }
 
     public void softDelete(Long issueId) {

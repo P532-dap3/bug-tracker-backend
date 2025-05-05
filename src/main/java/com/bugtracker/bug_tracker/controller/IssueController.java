@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/api/issues")
 public class IssueController {
@@ -25,11 +26,28 @@ public class IssueController {
                 .toList();
     }
 
+    @GetMapping("/{issueId}")
+    public IssueDTO getIssueById(@PathVariable Long issueId) {
+        Issue issue = issueService.getIssueById(issueId);
+        return DTOMapper.toIssueDTO(issue);
+    }
+
+    @PutMapping("/{issueId}")
+    public IssueDTO updateIssue(@PathVariable Long issueId, @RequestBody IssueDTO dto) {
+        Issue updatedIssue = issueService.updateIssue(issueId, dto);
+        return DTOMapper.toIssueDTO(updatedIssue);
+    }
+
     @GetMapping("/status/{status}")
     public List<IssueDTO> getByStatus(@PathVariable IssueStatus status) {
         return issueService.getIssuesByStatus(status).stream()
                 .map(DTOMapper::toIssueDTO)
                 .toList();
+    }
+
+    @GetMapping("/{id}/hierarchy")
+    public List<IssueDTO> getIssueHierarchy(@PathVariable Long id) {
+        return issueService.getIssueHierarchy(id);
     }
 
     @PostMapping

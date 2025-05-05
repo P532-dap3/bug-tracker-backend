@@ -1,12 +1,14 @@
 package com.bugtracker.bug_tracker.model;
 
+import com.bugtracker.bug_tracker.iterator.CompositeIterator;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.Iterator;
 import java.util.List;
 
 @Entity
-public class Issue {
+public class Issue implements Iterable<Issue> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -145,5 +147,10 @@ public class Issue {
 
     public void setSubIssues(List<Issue> subIssues) {
         this.subIssues = subIssues;
+    }
+
+    @Override
+    public Iterator<Issue> iterator() {
+        return new CompositeIterator(this);
     }
 }
