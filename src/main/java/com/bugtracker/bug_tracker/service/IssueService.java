@@ -161,10 +161,20 @@ public class IssueService {
         return issueDTOs;
     }
 
-    public void softDelete(Long issueId) {
-        Issue issue = issueRepository.findById(issueId)
+    public void deleteIssueAndSubIssues(Long issueId) {
+        Issue rootIssue = issueRepository.findById(issueId)
                 .orElseThrow(() -> new RuntimeException("Issue not found"));
-        issue.setDeleted(true);
-        issueRepository.save(issue);
+
+        List<Issue> issuesToDelete = new ArrayList<>();
+        CompositeIterator iterator = new CompositeIterator(rootIssue);
+
+        while (iterator.hasNext()) {
+            issuesToDelete.add(iterator.next());
+        }
+
+        // Delete sub-issues first, then the parent
+        for (int i = issuesToDelete.size() - 1; i >= 0; i--) {
+            issueRepository.delete(issuesToDelete.get(i));
+        }
     }
 }
