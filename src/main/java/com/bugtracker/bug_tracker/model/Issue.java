@@ -40,7 +40,7 @@ public class Issue implements Iterable<Issue> {
     @JoinColumn(name = "parent_issue_id")
     private Issue parentIssue;
 
-    @OneToMany(mappedBy = "parentIssue", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parentIssue", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Issue> subIssues;
 
     @PrePersist

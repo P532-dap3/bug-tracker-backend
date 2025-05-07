@@ -107,7 +107,7 @@ public class IssueController {
     }
 
     @DeleteMapping("/{id}")
-    public void softDeleteIssue(@PathVariable Long id) {
-        issueService.softDelete(id);
+    public void deleteIssue(@PathVariable Long id) {
+        issueService.deleteIssueAndSubIssues(id);
     }
 }
